@@ -42,3 +42,8 @@ python src/main.py
 **Universidad Sergio Arboleda**  
 Escuela de Ciencias Exactas e Ingeniería  
 Ingeniería en Ciencias de la Computación e Inteligencia Artificial (ICCIA)
+
+integrantes:
+*Sara Valentina Díaz Rojas
+*Tomás Felipe Morera Pérez
+*Cristhian Santiago Pinilla Vega
