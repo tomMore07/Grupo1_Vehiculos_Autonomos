@@ -24,7 +24,7 @@ Requisitos: g++ con OpenMP (`-fopenmp`), Python ≥ 3.10.
 - `docs/02_arquitectura_uml.md` — UML (Mermaid) y flujo de datos
 - `docs/03_bigO_preliminar.md` — análisis de complejidad
 
-##Integrantes Grupo - 1  
+## Integrantes Grupo - 1  
 * Sara Valentina Díaz Rojas
 * Tomás Felipe Morera Pérez
 * Cristhian Santiago Pinilla Vega
