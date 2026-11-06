@@ -1,49 +1,25 @@
-# Proyecto Final Integrador - Grupo 1
-## Detección de Anomalías e Inferencia en Tiempo Real para Vehículos Autónomos
+# Grupo 1 — Detección de anomalías e inferencia en tiempo real (vehículos autónomos)
+Proyecto Final Integrador · Paradigmas de Programación (SIST0176) · Universidad Sergio Arboleda
 
-Repositorio oficial del equipo para la asignatura **SIST0176 - Paradigmas de Programación**. El sistema implementa una plataforma a bordo capaz de procesar telemetría masiva de sensores en milisegundos mediante la integración de tres paradigmas: Imperativo, Orientado a Objetos y Funcional.
+**Estado: Fase 1 (Sesiones 1 y 2)** — Módulo Java pendiente (Sesión 3); el diseño ya está en `docs/`.
 
----
+| Módulo | Paradigma | Carpeta | Estado |
+|---|---|---|---|
+| 1. Kernel LIDAR | Imperativo, C++17 + OpenMP | `cpp/` | Kernel inicial paralelizado |
+| 2. Motor de actuadores | POO, Java 17 | `java/` | UML y contratos (`docs/02_arquitectura_uml.md`) |
+| 3. Pipeline de telemetría | Funcional, Python 3.10+ | `python/` | Pipeline básico + tests |
 
-## 🏗️ Arquitectura Multiparadigma
+## Uso
+```bash
+make run-cpp      # compila y compara secuencial vs OpenMP (verifica resultados idénticos)
+./cpp/lidar_kernel --n 1000000 --threads 4
+./cpp/lidar_kernel --n 100000 --json   # salida para integración con Java
+make test-py      # pruebas unitarias del pipeline
+make run-py       # demo: anomalías sobre un generador infinito
+```
+Requisitos: g++ con OpenMP (`-fopenmp`), Python ≥ 3.10.
 
-1. **Módulo Imperativo (C++17):** Kernel geoespacial para filtrado de nubes de puntos LIDAR $O(N \log N)$ optimizado con memoria contigua y paralelismo en CPU mediante **OpenMP**.
-2. **Módulo Orientado a Objetos (Java 17+):** Motor de actuadores bajo principios **SOLID**, patrones GoF (*Template Method* y *Strategy*) y prevención de *aliasing* con colecciones inmutables.
-3. **Módulo Funcional (Python 3.10+):** Pipeline declarativo puro con funciones de orden superior (`map`, `filter`, `reduce`), inmutabilidad y evaluación perezosa para promedios móviles y detección de anomalías.
-
----
-
-## 🚀 Instrucciones de Compilación y Ejecución
-
-### Módulo Imperativo (C++)
-\`\`\`bash
-cd modulo-imperativo-cpp
-mkdir build && cd build
-cmake ..
-make
-./kernel_lidar
-\`\`\`
-
-### Módulo Orientado a Objetos (Java)
-\`\`\`bash
-cd modulo-poo-java
-mvn clean compile
-mvn test
-\`\`\`
-
-### Módulo Funcional (Python)
-\`\`\`bash
-cd modulo-funcional-py
-pip install -r requirements.txt
-python src/main.py
-\`\`\`
-
----
-**Universidad Sergio Arboleda**  
-Escuela de Ciencias Exactas e Ingeniería  
-Ingeniería en Ciencias de la Computación e Inteligencia Artificial (ICCIA)
-
-integrantes:
-* Sara Valentina Díaz Rojas
-* Tomás Felipe Morera Pérez
-* Cristhian Santiago Pinilla Vega
+## Documentación
+- `docs/01_requisitos.md` — requisitos y contratos de interfaz
+- `docs/02_arquitectura_uml.md` — UML (Mermaid) y flujo de datos
+- `docs/03_bigO_preliminar.md` — análisis de complejidad
