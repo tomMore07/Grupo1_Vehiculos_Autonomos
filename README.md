@@ -1,5 +1,6 @@
 # Grupo 1 — Detección de anomalías e inferencia en tiempo real (vehículos autónomos)
-Proyecto Final Integrador · Paradigmas de Programación (SIST0176) · Universidad Sergio Arboleda
+Proyecto Final Integrador · Universidad Sergio Arboleda
+Integrantes: Sara Díaz, Tomás Morera y Cristhian Pinilla.
 
 **Estado: Entrega Parcial (Sesión 3, 30 %)** — Fase 1 (Sesiones 1 y 2) y Fase 2 (Sesión 3) completadas. Los tres módulos están implementados, integrados y probados.
 
