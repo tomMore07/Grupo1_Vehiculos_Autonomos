@@ -1,6 +1,11 @@
 # Grupo 1 — Detección de anomalías e inferencia en tiempo real (vehículos autónomos)
 Proyecto Final Integrador · Universidad Sergio Arboleda
-Integrantes: Sara Díaz, Tomás Morera y Cristhian Pinilla.
+
+## Integrantes Grupo 1
+* Sara Valentina Díaz Rojas
+* Tomás Felipe Morera Pérez
+* Cristhian Santiago Pinilla Vega
+
 
 **Estado: Entrega Parcial (Sesión 3, 30 %)** — Fase 1 (Sesiones 1 y 2) y Fase 2 (Sesión 3) completadas. Los tres módulos están implementados, integrados y probados.
 
@@ -60,7 +65,4 @@ python3 pipeline.py --json --limit 5   # una anomalía por línea en JSON
 python3 -m unittest -v
 ```
 
-## Integrantes Grupo 1
-* Sara Valentina Díaz Rojas
-* Tomás Felipe Morera Pérez
-* Cristhian Santiago Pinilla Vega
+
