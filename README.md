@@ -59,15 +59,6 @@ python3 pipeline.py --json --limit 5   # una anomalía por línea en JSON
 python3 -m unittest -v
 ```
 
-Resultado esperado de `make test`: `Ran 8 tests ... OK` y `Resultado: 22 OK, 0 con fallo`. En `make run-integracion` el nivel de riesgo debe ser `CRITICO` con el frenado de emergencia registrado en el historial.
-
-## Contratos de interfaz
-| Enlace | Formato | Ejemplo |
-|---|---|---|
-| C++ → Java | Una línea JSON por nube (`min_obstacle_dist = -1` si no hay obstáculo) | `{"n_in":100000,"n_voxels":89,"min_obstacle_dist":8.528,"emergency_brake":true}` |
-| Python → Java | Una anomalía por línea | `{"t": 97, "value": 13.483, "mean": 24.962, "zscore": -32.173}` |
-
-
 ## Integrantes Grupo 1
 * Sara Valentina Díaz Rojas
 * Tomás Felipe Morera Pérez
