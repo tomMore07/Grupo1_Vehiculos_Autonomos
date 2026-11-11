@@ -18,11 +18,6 @@ Sensores → C++ (obstáculo más cercano) ──┐
                                          ├→ AdaptadorKernelCpp → MotorDecision → ActuadorFrenado
 Sensores → Python (anomalías) ───────────┘      (Java)            (Strategy)     (Template Method)
 ```
-Los módulos son procesos independientes que se comunican por la salida estándar en formato **JSON**. Java los consume a través de la interfaz `ProveedorPercepcion`, por lo que el dominio no depende de C++ ni de Python (DIP).
-
-- **Patrones y principios:** Template Method (`ActuadorFrenado.ejecutarSecuenciaFrenado()`, `final`), Strategy (`RiesgoPorDistancia`, `RiesgoPorTiempoColision`), Adapter (`AdaptadorKernelCpp`), SOLID.
-- **Inmutabilidad y aliasing:** `record` con invariantes validados, `Collections.unmodifiableList` para el historial y `List.copyOf` para resultados.
-- **Functional Core, Imperative Shell:** el núcleo de `pipeline.py` es puro; el azar y la impresión quedan en la cáscara.
 
 ## Estructura del repositorio
 ```
@@ -35,11 +30,6 @@ Los módulos son procesos independientes que se comunican por la salida estánda
 └── README.md
 ```
 
-## Requisitos
-- `g++` con soporte OpenMP (`-fopenmp`) y `make`
-- JDK 17 o superior
-- Python 3.10 o superior
-- Linux, macOS o **Windows con WSL** (el adaptador de Java ejecuta `cpp/lidar_kernel` y `python3`, por lo que no funciona en Windows nativo)
 
 Instalación en Ubuntu/WSL:
 ```bash
@@ -77,31 +67,6 @@ Resultado esperado de `make test`: `Ran 8 tests ... OK` y `Resultado: 22 OK, 0 c
 | C++ → Java | Una línea JSON por nube (`min_obstacle_dist = -1` si no hay obstáculo) | `{"n_in":100000,"n_voxels":89,"min_obstacle_dist":8.528,"emergency_brake":true}` |
 | Python → Java | Una anomalía por línea | `{"t": 97, "value": 13.483, "mean": 24.962, "zscore": -32.173}` |
 
-## Documentación
-- `docs/01_arquitectura_uml.pdf` — Documento de Arquitectura y Especificación UML (diagrama de clases, flujo de datos, patrones y SOLID)
-- `docs/02_informe_avance_bigO.pdf` — Informe de Avance Técnico y Análisis Big O (demostraciones, mediciones y análisis de Amdahl)
-- `docs/01_requisitos.md` — requisitos y contratos de interfaz
-- `docs/02_arquitectura_uml.md` — borrador del UML en Mermaid (la versión final está en el PDF)
-- `docs/03_bigO_preliminar.md` — borrador del análisis de complejidad
-- `docs/gen_uml.py` — regenera `uml_clases.svg` y `flujo_datos.svg` (requiere Graphviz)
-
-## Resultados de rendimiento (línea base)
-Medición del kernel con N = 2 000 000 puntos y 4 hilos:
-
-| Métrica | Valor |
-|---|---|
-| Speedup real (secuencial vs. paralelo) | 1.06× |
-| Peso del ordenamiento (etapa secuencial) | ≈ 70 % del tiempo |
-| Fracción secuencial f | ≈ 0.81 |
-| Speedup máximo según Amdahl (p = 4) | 1.17× |
-
-El cuello de botella es el ordenamiento de claves de vóxel, que aún es secuencial.
-
-## Próximos pasos (Sesión 4)
-- Paralelizar el ordenamiento y la compactación para superar el límite de Amdahl.
-- Benchmarks con 1, 2, 4 y 8 hilos y tabla comparativa de speedup.
-- Pruebas de *thread safety* en Java y en el kernel.
-- Refactorización completa de Functional Core / Imperative Shell.
 
 ## Integrantes Grupo 1
 * Sara Valentina Díaz Rojas
