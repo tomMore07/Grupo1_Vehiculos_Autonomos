@@ -1,7 +1,6 @@
 package g1.actuadores;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -36,8 +35,11 @@ public abstract class ActuadorFrenado {
         bitacora.add(msg);
     }
 
-    /** Vista de solo lectura: el estado interno no se filtra (sin aliasing). */
+    /**
+     * Vista de solo lectura corregida contra aliasing dinámico:
+     * Retorna una copia estática e inamovible utilizando List.copyOf()[cite: 1].
+     */
     public List<String> getBitacora() {
-        return Collections.unmodifiableList(bitacora);
+        return List.copyOf(bitacora);
     }
 }
