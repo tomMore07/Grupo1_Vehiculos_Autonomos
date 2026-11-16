@@ -6,7 +6,6 @@ Cascarón imperativo (efectos): source_stream y main() al final.
 from __future__ import annotations
 
 import random
-from collections import deque
 from dataclasses import dataclass
 from functools import reduce, wraps
 from itertools import islice
@@ -53,13 +52,17 @@ def mean_var(window: Tuple[float, ...]) -> Tuple[float, float]:
 
 
 def sliding_windows(size: int, stream: Iterable[float]) -> Iterator[Tuple[float, ...]]:
-    """Ventanas deslizantes inmutables (tuplas). Perezoso: funciona con generadores infinitos.
-    El deque es estado local, no observable desde fuera (transparencia referencial)."""
-    buf: deque = deque(maxlen=size)
-    for x in stream:
-        buf.append(x)
-        if len(buf) == size:
-            yield tuple(buf)
+    """Ventanas deslizantes puras e inmutables (tuplas) sin estructuras mutables internas (sin deque)."""
+    it = iter(stream)
+    ventana = tuple(islice(it, size))
+    if len(ventana) < size:
+        return
+    yield ventana
+    
+    for elemento in it:
+        # Desplazamiento funcional inmutable usando slicing de tuplas
+        ventana = ventana[1:] + (elemento,)
+        yield ventana
 
 
 @curry
@@ -69,14 +72,18 @@ def moving_average(size: int, stream: Iterable[float]) -> Iterator[float]:
 
 @curry
 def detect_anomalies(threshold: float, size: int, readings: Iterable[Reading]) -> Iterator[Anomaly]:
-    """Compara cada lectura con la ventana de las `size` lecturas PREVIAS (z-score).
-    Uso currificado: detect_anomalies(3.0)(20)(stream)."""
+    """Compara cada lectura con la ventana de las `size` lecturas PREVIAS (z-score) de forma puramente funcional."""
     def pairs() -> Iterator[Tuple[Tuple[float, ...], Reading]]:
-        buf: deque = deque(maxlen=size)
-        for r in readings:
-            if len(buf) == size:
-                yield tuple(buf), r
-            buf.append(r.value)
+        it = iter(readings)
+        ventana_inicial = list(islice(it, size))
+        if len(ventana_inicial) < size:
+            return
+        
+        ventana = tuple(r.value for r in ventana_inicial)
+        
+        for r in it:
+            yield ventana, r
+            ventana = ventana[1:] + (r.value,)
 
     def to_anomaly(pair: Tuple[Tuple[float, ...], Reading]) -> Anomaly:
         w, r = pair
