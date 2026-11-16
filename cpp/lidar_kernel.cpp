@@ -4,8 +4,14 @@
 #include <limits>
 #include <random>
 #include <utility>
+
 #ifdef _OPENMP
 #include <omp.h>
+#endif
+
+// Soporte para ordenamiento paralelo en GCC y entornos compatibles
+#ifdef __GLIBCXX__
+#include <parallel/algorithm>
 #endif
 
 namespace lidar {
@@ -51,8 +57,16 @@ Result process(const PointCloud& in, const Params& p, bool parallel) {
         keys[k] = {voxel_key(in.x[i], in.y[i], in.z[i], inv), i};
     }
 
-    // ---- Etapa 4: ordenamiento por clave, desempate por índice (O(M log M)) -> determinista
+    // ---- Etapa 4: ordenamiento optimizado para mitigar la Ley de Amdahl (O(M log M))
+    #if defined(__GLIBCXX__) && defined(_OPENMP)
+    if (parallel) {
+        __gnu_parallel::sort(keys.begin(), keys.end());
+    } else {
+        std::sort(keys.begin(), keys.end());
+    }
+    #else
     std::sort(keys.begin(), keys.end());
+    #endif
 
     // ---- Etapa 5: límites de cada vóxel (O(M)) y filtro de ruido (vóxeles dispersos)
     std::vector<std::pair<std::int64_t, std::int64_t>> runs;  // [inicio, fin)
@@ -101,12 +115,12 @@ PointCloud synthetic_cloud(std::size_t n, std::uint32_t seed) {
     std::uniform_real_distribution<float> ux(-50, 50), uy(-30, 30), uz(-1.6f, 2.5f), ui(0, 1), un(0, 1);
     std::normal_distribution<float> g(0.0f, 0.15f);
     PointCloud pc; pc.reserve(n);
-    const std::size_t n_obs = n / 20;           // 5% obstáculo denso a ~9 m al frente
+    const std::size_t n_obs = n / 20;            // 5% obstáculo denso a ~9 m al frente
     for (std::size_t i = 0; i < n; ++i) {
         const float t = un(gen);
         if (i < n_obs)       pc.push(9.0f + g(gen), 0.5f + g(gen), 0.3f + g(gen), ui(gen));
         else if (t < 0.40f)  pc.push(ux(gen), uy(gen), -1.5f + 0.05f * g(gen), ui(gen));  // suelo
-        else if (t < 0.45f)  pc.push(ux(gen) * 2, uy(gen), uz(gen), ui(gen));             // ruido disperso
+        else if (t < 0.45f)  pc.push(ux(gen) * 2, uy(gen), uz(gen), ui(gen));               // ruido disperso
         else                 pc.push(ux(gen), uy(gen), uz(gen), ui(gen));
     }
     return pc;
