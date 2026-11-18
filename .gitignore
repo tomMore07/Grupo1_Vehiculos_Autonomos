@@ -1,5 +1,22 @@
+# Binarios compilados (Mac/Linux y Windows)
 cpp/lidar_kernel
+cpp/lidar_kernel.exe
+*.o
+*.obj
+
+# Java compilado
 java/build/
-python/__pycache__/
 *.class
+
+# Python
+python/__pycache__/
+*.pyc
+
+# Archivos del sistema
 .DS_Store
+Thumbs.db
+desktop.ini
+
+# Editores
+.vscode/
+.idea/
