@@ -3,7 +3,7 @@ package g1.actuadores;
 public final class FrenoRegenerativo extends ActuadorFrenado {
     private static final double CARGA_MAXIMA_ACEPTABLE = 0.95;
     private final double cargaBateria;          // 0..1
-    private double torqueNm;
+    private volatile double torqueNm;
 
     public FrenoRegenerativo(double cargaBateria) {
         if (!(cargaBateria >= 0 && cargaBateria <= 1))
