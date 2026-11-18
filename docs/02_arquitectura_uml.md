@@ -162,41 +162,48 @@ Relaciones: `<|--` generalización · `<|..` realización · `o--` agregación �
 ### 5.1 Nivel 0 (diagrama de contexto)
 ```mermaid
 flowchart LR
-    E1["E1<br/>Sensor LIDAR"]
-    E2["E2<br/>Sensor de telemetría"]
-    P0(("0<br/>Sistema de detección<br/>y frenado de emergencia"))
-    E3["E3<br/>Sistema de frenos"]
-    E4["E4<br/>Operador / auditoría"]
-    E1 -->|"nube de puntos"| P0
-    E2 -->|"lecturas de telemetría"| P0
-    P0 -->|"orden de frenado (presión 0..1)"| E3
-    P0 -->|"historial de eventos (instantánea)"| E4
+    E1["E1 · Fuente LiDAR simulada"]
+    E2["E2 · Fuente de telemetría simulada"]
+    E3["E3 · Operador"]
+    P0(("0<br/>Procesar percepción<br/>y simular frenado"))
+
+    E1 -->|"Nube de puntos LiDAR"| P0
+    E2 -->|"Lecturas de telemetría"| P0
+    P0 -->|"Nivel de riesgo e historial de eventos"| E3
 ```
 
 ### 5.2 Nivel 1 (descomposición del proceso 0)
 ```mermaid
 flowchart LR
-    E1["E1<br/>Sensor LIDAR"]
-    E2["E2<br/>Sensor de telemetría"]
-    P1(("1.0<br/>Filtrar nube LIDAR<br/>C++ / OpenMP"))
-    P2(("2.0<br/>Detectar anomalías<br/>Python funcional"))
-    P3(("3.0<br/>Evaluar riesgo<br/>Java · Strategy"))
-    P4(("4.0<br/>Ejecutar frenado<br/>Java · Template Method"))
-    D1[("D1 │ Historial de eventos")]
-    D2[("D2 │ Bitácora del actuador")]
-    E3["E3<br/>Sistema de frenos"]
-    E4["E4<br/>Operador / auditoría"]
+    E1["E1 · Fuente LiDAR simulada"]
+    E2["E2 · Fuente de telemetría simulada"]
+    E3["E3 · Operador"]
 
-    E1 -->|"nube de puntos (x, y, z, intensidad)"| P1
-    E2 -->|"lecturas de telemetría"| P2
-    P1 -->|"obstáculo más cercano (JSON)"| P3
-    P2 -->|"anomalías (JSON)"| P3
-    P3 -->|"nivel de riesgo (CRÍTICO / ALTO)"| P4
-    P4 -->|"orden de frenado (presión 0..1)"| E3
-    P3 -->|"evento de riesgo y anomalías"| D1
-    P4 -->|"pasos de la secuencia"| D2
-    D1 -->|"historial (instantánea inmutable)"| E4
-    D2 -->|"bitácora (instantánea inmutable)"| E4
+    P1(("1.0<br/>Filtrar nube y localizar<br/>obstáculo · C++17/OpenMP"))
+    P2(("2.0<br/>Detectar anomalías<br/>Python"))
+    P3(("3.0<br/>Adaptar datos de<br/>percepción · Java"))
+    P4(("4.0<br/>Evaluar riesgo y<br/>decidir frenado · Java"))
+    P5(("5.0<br/>Simular secuencia<br/>de frenado · Java"))
+    P6(("6.0<br/>Presentar resultado<br/>de la ejecución · Java"))
+
+    D1@{ shape: datastore, label: "D1 · Historial de eventos" }
+    D2@{ shape: datastore, label: "D2 · Bitácora del actuador" }
+
+    E1 -->|"Nube de puntos LiDAR"| P1
+    E2 -->|"Lecturas de telemetría"| P2
+
+    P1 -->|"Distancia al obstáculo más cercano (JSON)"| P3
+    P2 -->|"Anomalías detectadas (JSON por línea)"| P3
+    P3 -->|"Obstáculo opcional y lista de anomalías"| P4
+
+    P4 -->|"Presión normalizada de frenado, si aplica"| P5
+    P5 -->|"Resultado de la secuencia de frenado"| P4
+    P5 -->|"Registros de la secuencia"| D2
+
+    P4 -->|"Eventos de anomalía y de evaluación de riesgo"| D1
+    P4 -->|"Nivel de riesgo o ausencia de obstáculo"| P6
+    D1 -->|"Instantánea inmutable del historial"| P6
+    P6 -->|"Nivel de riesgo e historial de eventos"| E3
 ```
 
 ### 5.3 Diccionario de datos
