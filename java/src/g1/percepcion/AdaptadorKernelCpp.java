@@ -10,12 +10,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
- * Adaptador: traduce la salida JSON del kernel C++ y del pipeline Python a objetos del dominio.
+ * Patrón Adapter: traduce la salida JSON del kernel C++ y del pipeline Python a objetos del dominio.
  * Se comunica por procesos externos; si se migra a JNI solo cambia esta clase.
  */
 public final class AdaptadorKernelCpp implements ProveedorPercepcion {
@@ -37,28 +38,31 @@ public final class AdaptadorKernelCpp implements ProveedorPercepcion {
     public Optional<Obstaculo> obstaculoMasCercano() {
         Path exe = raiz.resolve("cpp").resolve("lidar_kernel");
         if (!Files.isExecutable(exe))
-            throw new PercepcionException("No existe el kernel compilado: " + exe + " (ejecute 'make')");
+            throw new IllegalStateException("No existe el kernel compilado: " + exe + " (ejecute 'make')");
         List<String> lineas = ejecutar(List.of(exe.toString(), "--n", String.valueOf(nPuntos), "--json"), raiz);
-        if (lineas.isEmpty()) throw new PercepcionException("El kernel no produjo JSON");
-        Map<String, String> r = JsonPlano.parsear(lineas.get(0));
-        double dist = JsonPlano.doble(r, "min_obstacle_dist");
+        if (lineas.isEmpty()) throw new IllegalStateException("El kernel no produjo JSON");
+        double dist = leerCampo(lineas.get(0), "min_obstacle_dist");
         if (dist < 0) return Optional.empty();       // -1: sin obstáculo en el corredor
         // El kernel solo ve geometría estática: el obstáculo se aproxima a la velocidad del vehículo.
-        return Optional.of(new Obstaculo(dist, velocidadVehiculoMs, 0.0));
+        return Optional.of(new Obstaculo(dist, velocidadVehiculoMs));
     }
 
     @Override
     public List<Anomalia> anomaliasRecientes() {
-        Path dir = raiz.resolve("python");
         List<String> lineas = ejecutar(
-            List.of("python3", "pipeline.py", "--json", "--limit", String.valueOf(limiteAnomalias)), dir);
+            List.of("python3", "pipeline.py", "--json", "--limit", String.valueOf(limiteAnomalias)),
+            raiz.resolve("python"));
         List<Anomalia> res = new ArrayList<>();
-        for (String l : lineas) {
-            Map<String, String> m = JsonPlano.parsear(l);
-            res.add(new Anomalia((long) JsonPlano.doble(m, "t"), JsonPlano.doble(m, "value"),
-                                 JsonPlano.doble(m, "mean"), JsonPlano.doble(m, "zscore")));
-        }
+        for (String l : lineas)
+            res.add(new Anomalia((long) leerCampo(l, "t"), leerCampo(l, "value"), leerCampo(l, "zscore")));
         return List.copyOf(res);                      // copia inmutable
+    }
+
+    /** Lee un campo numérico de un objeto JSON plano, p. ej. {"t": 97, "zscore": -3.2}. */
+    public static double leerCampo(String json, String clave) {
+        Matcher m = Pattern.compile("\"" + Pattern.quote(clave) + "\"\\s*:\\s*(-?[0-9.eE+-]+)").matcher(json);
+        if (!m.find()) throw new IllegalArgumentException("Falta el campo '" + clave + "' en: " + json);
+        return Double.parseDouble(m.group(1));
     }
 
     private static List<String> ejecutar(List<String> cmd, Path dir) {
@@ -69,14 +73,14 @@ public final class AdaptadorKernelCpp implements ProveedorPercepcion {
                 String l;
                 while ((l = br.readLine()) != null) if (l.trim().startsWith("{")) json.add(l);
             }
-            if (!p.waitFor(60, TimeUnit.SECONDS)) { p.destroyForcibly(); throw new PercepcionException("Tiempo agotado: " + cmd); }
-            if (p.exitValue() != 0) throw new PercepcionException("Código de salida " + p.exitValue() + ": " + cmd);
+            if (!p.waitFor(60, TimeUnit.SECONDS)) { p.destroyForcibly(); throw new IllegalStateException("Tiempo agotado: " + cmd); }
+            if (p.exitValue() != 0) throw new IllegalStateException("Código de salida " + p.exitValue() + ": " + cmd);
             return json;
         } catch (IOException e) {
-            throw new PercepcionException("No se pudo ejecutar " + cmd, e);
+            throw new IllegalStateException("No se pudo ejecutar " + cmd, e);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new PercepcionException("Interrumpido", e);
+            throw new IllegalStateException("Interrumpido", e);
         }
     }
 }
