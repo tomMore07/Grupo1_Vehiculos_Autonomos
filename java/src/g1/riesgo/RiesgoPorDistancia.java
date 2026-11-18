@@ -1,6 +1,5 @@
 package g1.riesgo;
 
-import g1.dominio.EstadoVehiculo;
 import g1.dominio.NivelRiesgo;
 import g1.dominio.Obstaculo;
 import java.util.Objects;
@@ -18,9 +17,8 @@ public final class RiesgoPorDistancia implements EstrategiaEvaluacionRiesgo {
     }
 
     @Override
-    public NivelRiesgo evaluar(Obstaculo obs, EstadoVehiculo est) {
-        Objects.requireNonNull(obs, "obs");
-        double d = obs.distanciaM();
+    public NivelRiesgo evaluar(Obstaculo obs) {
+        double d = Objects.requireNonNull(obs, "obs").distanciaM();
         if (d <= umbralCriticoM) return NivelRiesgo.CRITICO;
         if (d <= umbralAltoM) return NivelRiesgo.ALTO;
         if (d <= 2 * umbralAltoM) return NivelRiesgo.MEDIO;
