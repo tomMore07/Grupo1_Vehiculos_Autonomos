@@ -1,6 +1,5 @@
 package g1.riesgo;
 
-import g1.dominio.EstadoVehiculo;
 import g1.dominio.NivelRiesgo;
 import g1.dominio.Obstaculo;
 import java.util.Objects;
@@ -18,7 +17,7 @@ public final class RiesgoPorTiempoColision implements EstrategiaEvaluacionRiesgo
     }
 
     @Override
-    public NivelRiesgo evaluar(Obstaculo obs, EstadoVehiculo est) {
+    public NivelRiesgo evaluar(Obstaculo obs) {
         Objects.requireNonNull(obs, "obs");
         double cierre = obs.velocidadRelativaMs();   // > 0 cuando se aproxima
         if (cierre <= 0) return NivelRiesgo.BAJO;
