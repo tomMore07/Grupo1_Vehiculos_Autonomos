@@ -1,10 +1,11 @@
 package g1.dominio;
 
-/** Niveles de riesgo ordenados de menor a mayor severidad. */
-public enum NivelRiesgo {
-    BAJO, MEDIO, ALTO, CRITICO;
+import java.util.Objects;
 
-    public boolean esAlMenos(NivelRiesgo otro) {
-        return compareTo(otro) >= 0;
+/** Entrada inmutable del historial del motor. */
+public record EventoTelemetria(NivelRiesgo nivel, String descripcion) {
+    public EventoTelemetria {
+        Objects.requireNonNull(nivel, "nivel");
+        Objects.requireNonNull(descripcion, "descripcion");
     }
 }
