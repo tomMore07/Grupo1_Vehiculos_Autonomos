@@ -65,7 +65,7 @@ Salida esperada de `make test`: `kernel con N hilo(s): resultado paralelo == sec
 `java/test/g1/Pruebas.java`, sección "Inmutabilidad y aliasing". Se ejecutan con `make test-java`. Las protecciones están en `MotorDecision.getHistorial()` y `ActuadorFrenado.getBitacora()` (devuelven `List.copyOf`).
 
 ## Rendimiento
-El diseño inicial (con `std::sort` secuencial) alcanzó **1.06×** con 4 hilos: el ordenamiento ocupaba ≈ 70 % del tiempo y la ley de Amdahl limitaba el speedup a ≈ 1.2×. La versión final ordena por bloques en paralelo y fusiona; el modelo del informe (§6.5) estima ≈ 2.9× con 4 hilos y ≈ 4.6× con 8. Los valores reales se miden con `make benchmark` y se registran en el informe (§6.6).
+El diseño inicial, con `std::sort` secuencial, obtuvo **1,06× de aceleración con cuatro hilos**. El ordenamiento representaba alrededor del **70 % del tiempo**, y la fracción secuencial total daba una cota de Amdahl de **1,17× con cuatro hilos**. La versión final ordena bloques en paralelo y los fusiona por rondas. El modelo de la sección 6.5 estimó **2,9× con cuatro hilos** y **4,6× con ocho**. En la medición con `make benchmark` en WSL, con dos millones de puntos sintéticos, se obtuvieron **2,33× con cuatro hilos** y **2,34× con ocho**. El menor tiempo paralelo fue **38,9 ms con cuatro hilos**. Estos resultados corresponden a la sección 6.6.
 
 ## Integrantes Grupo 1
 * Sara Valentina Díaz Rojas
