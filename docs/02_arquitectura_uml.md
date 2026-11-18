@@ -218,33 +218,70 @@ flowchart LR
 | historial / bitácora | lista de eventos | `List.copyOf(...)` (instantánea inmutable) |
 
 ## 6. Diagrama de secuencia (ciclo de decisión)
+## 6. Diagrama de secuencia (ciclo de decisión)
+
 ```mermaid
 sequenceDiagram
-    actor U as Main
+    actor O as Operador
+    participant J as Main (Java)
     participant M as MotorDecision
     participant A as AdaptadorKernelCpp
-    participant Py as pipeline.py (Python)
-    participant C as lidar_kernel (C++)
-    participant S as EstrategiaEvaluacionRiesgo
+    participant P as Pipeline Python
+    participant C as Kernel LiDAR C++17
+    participant R as EstrategiaEvaluacionRiesgo
     participant F as ActuadorFrenado
 
-    U->>M: procesarPercepcion(adaptador)
+    O->>J: Ejecutar demostración
+    J->>M: procesarPercepcion(percepcion)
+
+    Note over M,A: Adapter · el motor usa la interfaz ProveedorPercepcion
     M->>A: anomaliasRecientes()
-    A->>Py: python3 pipeline.py --json --limit 3
-    Py-->>A: JSON (una anomalía por línea)
-    A-->>M: List<Anomalia> (copia inmutable)
-    M->>M: registra anomalías en el historial
-    M->>A: obstaculoMasCercano()
-    A->>C: lidar_kernel --n N --json
-    C-->>A: JSON {min_obstacle_dist, ...}
-    A-->>M: Optional<Obstaculo>
-    M->>S: evaluar(obs)
-    S-->>M: NivelRiesgo
-    alt riesgo CRÍTICO o ALTO
-        M->>F: ejecutarSecuenciaFrenado(presión)
-        Note over F: verificarSistema() → aplicarPresion()<br/>(pasos variables de la subclase)
-        F-->>M: true / false
+    A->>P: Ejecutar pipeline con límite de anomalías
+    P-->>A: Una anomalía por línea en JSON
+    A-->>M: Lista de anomalías
+
+    loop Por cada anomalía recibida
+        M->>M: Registrar evento de telemetría con nivel MEDIO
     end
-    M->>M: registra el evento en el historial
-    M-->>U: Optional<NivelRiesgo>
+
+    M->>A: obstaculoMasCercano()
+    A->>C: Ejecutar kernel LiDAR con salida JSON
+    C-->>A: JSON con min_obstacle_dist
+    A-->>M: Optional de Obstaculo
+
+    alt Hay un obstáculo
+        M->>M: evaluarYActuar(obstaculo)
+        Note over M,R: Strategy · la política de evaluación es intercambiable
+        M->>R: evaluar(obstaculo)
+        R-->>M: NivelRiesgo
+
+        alt Riesgo CRÍTICO o ALTO
+            M->>M: Seleccionar presión 1.0 para CRÍTICO o 0.5 para ALTO
+            M->>F: ejecutarSecuenciaFrenado(presion)
+            Note over F: Template Method · el método final fija la secuencia
+            F->>F: Registrar inicio en la bitácora
+            F->>F: verificarSistema()
+            alt Verificación exitosa
+                F->>F: aplicarPresion(presion)
+                F->>F: Registrar frenado aplicado
+                F-->>M: true
+            else Verificación fallida
+                F->>F: Registrar frenado abortado
+                F-->>M: false
+            end
+        else Riesgo MEDIO o BAJO
+            Note over M: Continúa con el registro del evento de riesgo
+        end
+
+        M->>M: Registrar evento de riesgo y resultado del frenado, si aplica
+        M-->>J: Optional con el nivel de riesgo
+    else No hay obstáculo
+        M-->>J: Optional.empty()
+    end
+
+    J->>M: getHistorial()
+    M-->>J: Instantánea inmutable del historial
+    J-->>O: Mostrar nivel de riesgo o SIN OBSTÁCULO y el historial
 ```
+
+Las anomalías se registran como eventos de telemetría con nivel `MEDIO`. La estrategia evalúa el riesgo de frenado cuando la percepción devuelve un obstáculo.
