@@ -32,6 +32,8 @@ struct Result {
     std::size_t n_voxels = 0;
     float min_obstacle_dist = -1.0f; // -1 = sin obstáculo en el corredor
     bool  emergency_brake = false;
+    double stage_ms[7] = {0, 0, 0, 0, 0, 0, 0};  // tiempo por etapa (diagnóstico)
+    double merge_ms = 0;                         // parte del ordenamiento dedicada a la fusión final
 };
 
 // parallel=false -> versión secuencial; true -> OpenMP. Ambas producen resultados idénticos.
