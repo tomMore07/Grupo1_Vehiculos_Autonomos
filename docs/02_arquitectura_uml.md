@@ -17,17 +17,20 @@ class NivelRiesgo {
   ALTO
   CRITICO
 }
+
 class Obstaculo {
   <<record>>
   +double distanciaM
   +double velocidadRelativaMs
 }
+
 class Anomalia {
   <<record>>
   +long t
   +double valor
   +double zscore
 }
+
 class EventoTelemetria {
   <<record>>
   +NivelRiesgo nivel
@@ -38,11 +41,13 @@ class EstrategiaEvaluacionRiesgo {
   <<interface>>
   +evaluar(Obstaculo obs) NivelRiesgo
 }
+
 class RiesgoPorDistancia {
   -double umbralCriticoM
   -double umbralAltoM
   +evaluar(Obstaculo obs) NivelRiesgo
 }
+
 class RiesgoPorTiempoColision {
   -double ttcCriticoS
   -double ttcAltoS
@@ -58,12 +63,14 @@ class ActuadorFrenado {
   #registrarEvento(String msg) void
   +getBitacora() List~String~
 }
+
 class FrenoHidraulico {
   -double nivelLiquido
   -double presionLineaBar
   #verificarSistema() boolean
   #aplicarPresion(double presion) void
 }
+
 class FrenoRegenerativo {
   -double cargaBateria
   -double torqueNm
@@ -76,6 +83,7 @@ class ProveedorPercepcion {
   +obstaculoMasCercano() Optional~Obstaculo~
   +anomaliasRecientes() List~Anomalia~
 }
+
 class AdaptadorKernelCpp {
   -Path raiz
   -int nPuntos
@@ -104,9 +112,10 @@ EstrategiaEvaluacionRiesgo <|.. RiesgoPorTiempoColision
 ActuadorFrenado <|-- FrenoHidraulico
 ActuadorFrenado <|-- FrenoRegenerativo
 ProveedorPercepcion <|.. AdaptadorKernelCpp
+
 MotorDecision o-- EstrategiaEvaluacionRiesgo : estrategia
 MotorDecision o-- ActuadorFrenado : actuador
-MotorDecision *-- EventoTelemetria : historial 0..*
+MotorDecision *-- "0..*" EventoTelemetria : historial
 MotorDecision ..> ProveedorPercepcion : usa
 EstrategiaEvaluacionRiesgo ..> Obstaculo
 ProveedorPercepcion ..> Obstaculo
@@ -117,6 +126,7 @@ note for ActuadorFrenado "Template Method: ejecutarSecuenciaFrenado() es final y
 note for EstrategiaEvaluacionRiesgo "Strategy: política de riesgo intercambiable (OCP)"
 note for AdaptadorKernelCpp "Adapter: traduce JSON de C++ y Python a objetos del dominio"
 ```
+
 
 Relaciones: `<|--` generalización · `<|..` realización · `o--` agregación · `*--` composición · `-->` asociación · `..>` dependencia.
 
