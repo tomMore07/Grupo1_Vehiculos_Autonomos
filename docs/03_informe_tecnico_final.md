@@ -73,7 +73,71 @@ La nube de puntos se almacena como **Structure of Arrays** (`x[]`, `y[]`, `z[]`,
 
 ## 5. Análisis de complejidad (Big O)
 
-#
+### 5.1 Definiciones y modelo de costo
+
+**Definición.** f(N) ∈ O(g(N)) ⇔ ∃ c > 0, ∃ N₀ tales que ∀ N ≥ N₀: f(N) ≤ c·g(N). f ∈ Θ(g) ⇔ f ∈ O(g) y g ∈ O(f).
+
+**Notación.** N = puntos de entrada; M ≤ N = puntos que sobreviven al filtro de suelo y alcance; V = vóxeles válidos (V ≤ M/3 porque `min_pts_voxel = 3`); p = número de hilos (constante). Operaciones aritméticas, comparaciones y accesos a `std::vector` cuestan Θ(1). Se cuenta el peor caso salvo que se indique lo contrario.
+
+### 5.2 Tiempo secuencial
+
+| **Etapa**      | **Costo**      | **Justificación**                                                                         |
+| -------------- | -------------- | ----------------------------------------------------------------------------------------- |
+| 1 Máscara      | k₁·N           | Un bucle de cuerpo constante sobre N puntos.                                              |
+| 2 Compactación | k₂·N           | Dos pasadas sobre N (contar y escribir).                                                  |
+| 3 Claves       | k₃·M           | Un bucle sobre los M puntos conservados.                                                  |
+| 4 Ordenamiento | ≤ k₄·M·log₂M   | La norma C++11 exige O(M log M) comparaciones en el peor caso (introsort).                |
+| 5 Segmentación | ≤ k₅·M         | El bucle interno avanza `e` y el externo asigna `s = e`: cada posición se visita una vez. |
+| 6 Centroides   | ≤ k₆·M + k₆′·V | Los rangos de vóxeles son disjuntos: Σ(fin − inicio) ≤ M.                                 |
+| 7 Mínimo       | k₇·V           | Un bucle sobre V centroides.                                                              |
+
+**Teorema 1.** T(N) ∈ O(N log N).
+
+*Demostración.* Sumando las etapas, T(N) ≤ (k₁+k₂)·N + (k₃+k₅+k₆)·M + (k₆′+k₇)·V + k₄·M·log₂M. Para N ≥ 2: (i) V ≤ M ≤ N; (ii) log₂N ≥ 1, luego N ≤ N·log₂N; (iii) h(x) = x·log₂x es creciente para x ≥ 1 y M ≤ N, luego M·log₂M ≤ N·log₂N. Aplicando (i)–(iii) a cada término, T(N) ≤ c·N·log₂N con c = k₁+k₂+k₃+k₄+k₅+k₆+k₆′+k₇ y N₀ = 2. ∎
+
+**Proposición 2 (cota ajustada).** Si M ≥ α·N con α ∈ (0,1], entonces T(N) ∈ Θ(N log N).
+
+*Demostración.* La cota superior es el Teorema 1. Para la inferior, ordenar M claves distintas requiere Ω(M log M) comparaciones en el peor caso, y M·log₂M ≥ αN·(log₂N + log₂α) ≥ (α/2)·N·log₂N siempre que log₂N ≥ 2·log₂(1/α), es decir N ≥ 1/α². ∎ (En los datos sintéticos M/N ≈ 0.55, luego N₀ ≈ 4.)
+
+### 5.3 Espacio
+
+| **Estructura**                                       | **Bytes** | **Cota** |
+| ---------------------------------------------------- | --------- | -------- |
+| `mask` (`uint8_t`)                                   | N         | Θ(N)     |
+| `kept` (`uint32_t`)                                  | 4·M       | Θ(M)     |
+| `keys` (`pair<uint64_t,uint32_t>`, 16 B con relleno) | 16·M      | Θ(M)     |
+| Búfer temporal de `inplace_merge` (modo paralelo)    | ≤ 8·M     | O(M)     |
+| `runs` (dos `int64_t`)                               | ≤ 16·V    | O(V)     |
+| Salida (4 arreglos `float` de V)                     | 16·V      | Θ(V)     |
+| Contadores por hilo                                  | O(p)      | O(1)     |
+
+**Teorema 3.** El espacio adicional es S(N) ∈ Θ(N).
+
+*Demostración.* S(N) ≤ N + 4M + 16M + 8M + 32V + O(p). Con V ≤ M/3 ≤ N/3: S(N) ≤ N + 28N + 32N/3 + O(p) < 40·N + O(p), luego S ∈ O(N). Además S(N) ≥ N por `mask`, luego S ∈ Ω(N). ∎
+
+### 5.4 Tiempo paralelo (trabajo y camino crítico)
+
+El ordenamiento paralelo divide las M claves en p bloques, ordena cada uno con `std::sort` y los fusiona en log₂p rondas.
+
+**Teorema 4.** Con p hilos, el trabajo total sigue siendo O(N log N) y el tiempo ideal es Tₚ(N) = O( (N log N)/p + N ).
+
+*Demostración.* *Trabajo:* ordenar los p bloques cuesta p·(M/p)·log₂(M/p) = M·log₂(M/p); las log₂p rondas de fusión cuestan M cada una, es decir M·log₂p. La suma es M·log₂M: no hay trabajo asintótico extra. *Camino crítico:* las etapas 1, 2, 3, 6 y 7 se reparten entre p hilos (O(N/p)); los bloques se ordenan en paralelo en O((M/p)·log(M/p)); en la ronda r hay p/2ʳ fusiones independientes, cada una de tamaño 2ʳ·M/p y secuencial, así que la ronda cuesta O(2ʳ·M/p), y Σ(r = 1 … log₂p) 2ʳ·M/p = (2p − 2)·M/p < 2M = O(N). La segmentación (etapa 5) es O(M). Sumando se obtiene Tₚ = O(N/p + (N/p)·log N + N). ∎
+
+**Corolario (speedup asintótico).** Para p fijo, Sₚ = T₁/Tₚ ≥ c₁·N·log N / (c₂·N·log N / p + c₃·N) = c₁ / (c₂/p + c₃/log N) → p·c₁/c₂ cuando N → ∞. La parte que sigue siendo secuencial en esencia (la última fusión, Θ(N)) pesa una fracción O(1/log N) del trabajo, por lo que **la eficiencia mejora al crecer N**. Para N = 2·10⁶ (log₂N ≈ 21) esa fracción aún es apreciable, y de ahí el techo práctico que se estima en §6.
+
+**Comparación con el diseño anterior.** Con `std::sort` secuencial, la fracción secuencial era f ≈ 0.81 y la ley de Amdahl acotaba el speedup a 1/f ≈ 1.24× sin importar p. Con el ordenamiento por bloques, la parte secuencial ya no es el ordenamiento completo sino la fusión final (≈ 11 % del tiempo secuencial) más la segmentación (≈ 2 %).
+
+### 5.5 Pipeline funcional y módulo Java
+
+Sea W el tamaño de ventana y N el número de lecturas.
+
+| **Función**                                             | **Tiempo** | **Espacio** |
+| ------------------------------------------------------- | ---------- | ----------- |
+| `mean_var`                                              | Θ(W)       | O(1)        |
+| `sliding_windows`, `moving_average`, `detect_anomalies` | Θ(N·W)     | O(W)        |
+
+Cada ventana nueva `(w + (x,))[-size:]` cuesta Θ(W) (dos tuplas de tamaño ≈ W). Por la evaluación perezosa el espacio no depende de N, lo que permite el flujo infinito. En Java: `evaluarYActuar` es O(1) amortizado; `getHistorial()` es **O(E)** (copia de E eventos), el costo de la instantánea inmutable; `AdaptadorKernelCpp.leerCampo` es O(L) en la longitud L de la línea.
+**
 
 ## 6. Pruebas y benchmarks
 
