@@ -16,7 +16,7 @@ La validación incluye la ejecución integrada y pruebas de los módulos. El an�
 ## 2. Arquitectura de dominio
 Java inicia los procesos de C++ y Python y lee sus resultados en JSON. El kernel entrega la distancia al obstáculo más cercano en el corredor y el pipeline aporta los eventos de anomalía. El motor de decisión utiliza la percepción mediante una interfaz y coordina la secuencia de frenado simulada.
 
-Al guardar este informe en `docs/` del repositorio, se pueden consultar el [diagrama UML](01_arquitectura_uml.pdf) y los [diagramas de flujo de datos y de secuencia](02_arquitectura_uml.md).
+Al guardar este informe en `docs/` del repositorio, se pueden consultar el [diagrama UML] y los [diagramas de flujo de datos y de secuencial].
 
 - **Template Method:** `ActuadorFrenado.ejecutarSecuenciaFrenado()` es `final` y fija el orden verificar → aplicar → registrar; `FrenoHidraulico` y `FrenoRegenerativo` aportan los pasos variables.
 - **Strategy:** `EstrategiaEvaluacionRiesgo` con `RiesgoPorDistancia` y `RiesgoPorTiempoColision`, intercambiables en ejecución.
