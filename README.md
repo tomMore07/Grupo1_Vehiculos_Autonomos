@@ -59,8 +59,7 @@ Salida esperada de `make test`: `kernel con N hilo(s): resultado paralelo == sec
 | `01_arquitectura_uml.pdf` | Arquitectura: UML de clases, **DFD formal** (niveles 0 y 1), patrones GoF, SOLID y encapsulamiento |
 | `02_arquitectura_uml.md` | Los mismos diagramas en **Mermaid** (clases, DFD, secuencia) |
 | `03_informe_tecnico_final.pdf` (`.md`) | Informe técnico final: implementación, análisis Big O formal, benchmarks, side effects y pruebas |
-| `01_requisitos.md` | Requisitos y contratos de interfaz |
-| `gen_diagramas.py` | Regenera las figuras del PDF (requiere Graphviz) |
+
 
 ## Pruebas de inmutabilidad y aliasing
 `java/test/g1/Pruebas.java`, sección "Inmutabilidad y aliasing". Se ejecutan con `make test-java`. Las protecciones están en `MotorDecision.getHistorial()` y `ActuadorFrenado.getBitacora()` (devuelven `List.copyOf`).
