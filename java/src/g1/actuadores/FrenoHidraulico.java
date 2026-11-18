@@ -3,7 +3,7 @@ package g1.actuadores;
 public final class FrenoHidraulico extends ActuadorFrenado {
     private static final double NIVEL_MINIMO = 0.20;
     private final double nivelLiquido;          // 0..1
-    private double presionLineaBar;
+    private volatile double presionLineaBar;
 
     public FrenoHidraulico(double nivelLiquido) {
         if (!(nivelLiquido >= 0 && nivelLiquido <= 1))
